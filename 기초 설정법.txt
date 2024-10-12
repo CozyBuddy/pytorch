@@ -1,0 +1,1 @@
+numpy 버전 오류나면 anaconda prompt 실행해서 해당 가상환경에서 다운그레이드 해주면 됨.
