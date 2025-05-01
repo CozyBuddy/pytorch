@@ -122,3 +122,61 @@ df.drop('칼로리' , axis=1,inplace=True)
 print(df.head())
 
 print(df.shape)
+
+df = pd.read_csv('cafe.csv')
+print(df.loc[0])
+print(df.loc[1,'가격'])
+
+print(df.loc[:,'가격'])
+
+print(df.loc[2,'메뉴':'칼로리'])
+
+print(df.loc[2,['메뉴','칼로리']])
+
+print(df.loc[1:3,'가격':'칼로리'])
+
+df = pd.read_csv('cafe.csv')
+df.drop(0,axis=0,inplace=True)
+print(df.head())
+
+print(df.iloc[0,1])
+print(df.loc[1,'메뉴'])
+
+print(df.iloc[2,:2])
+
+print(df.iloc[1:3])
+
+print(df.loc[:,'메뉴':'칼로리'])
+
+import numpy as np
+
+df = pd.read_csv('cafe.csv')
+df['원산지']  = np.nan
+print(df)
+
+df.loc[0,'원산지']  = '콜롬비아'
+df.loc[2:3,'원산지'] = '과테말라'
+print(df.head())
+
+df.loc['시즌'] = ['크리스마스라떼' , 6000,300,'한국']
+
+print(df.head(8))
+
+df.loc[7] = {'메뉴':'딴짓커피' , '가격':2000 , '칼로리':20}
+
+print(df.tail())
+
+df.drop("시즌",axis=0,inplace=True)
+
+df.to_csv('cafe2.csv' , index=False)
+
+df = pd.read_csv('cafe2.csv')
+print(df.head())
+
+print(df.sort_index(ascending=False))
+print(df.sort_values('메뉴',ascending=False))
+
+print(df.sort_values(['가격','메뉴'],ascending=[False,True],inplace=True))
+print(df)
+
+print(df.reset_index(drop=True))
