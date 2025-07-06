@@ -1,0 +1,177 @@
+import pandas as pd
+
+from scipy import stats
+
+df = pd.DataFrame({
+    'A' : [10.5,11.3,10.8,9.6,11.1,10.2,10.9,11.4,10.5,10.3],
+    'B' : [11.9 , 12.4 ,12.1, 13.2, 12.5,11.8,12.2,12.9,12.4,12.3],
+    'C' : [11.2, 11.7,11.6,10.9 , 11.3,11.1,10.8 , 11.5,11.4,11.0],
+    'D' : [9.8 , 9.4 , 9.1,9.5,9.6,9.9 , 9.2,9.7,9.3,9.4] 
+})
+
+print(df.head())
+
+print(stats.shapiro(df['A']))
+print(stats.shapiro(df['B']))
+print(stats.shapiro(df['C']))
+print(stats.shapiro(df['D']))
+
+print(stats.levene(df['A'] , df['B'] , df['C'] , df['D']))
+
+print(stats.f_oneway(df['A'] , df['B'] , df['C'] , df['D']))
+
+import pandas as pd
+
+df = pd.read_csv('fertilizer.csv')
+
+from statsmodels.formula.api import ols
+from statsmodels.stats.anova import anova_lm
+
+model = ols('성장 ~ C(비료)' , df).fit()
+print(anova_lm(model))
+
+df = pd.read_csv('tree.csv')
+
+print(df.head())
+
+import statsmodels.api as sm
+from statsmodels.formula.api import ols
+
+model = ols('성장률 ~ C(나무) + C(비료) + C(나무):C(비료)', df).fit()
+
+anova_table = sm.stats.anova_lm(model)
+
+print(anova_table)
+
+
+observed = [150,120,30]
+expected = [0.5*300 , 0.35*300 , 0.15*300]
+
+from scipy import stats
+
+print(stats.chisquare(observed,expected))
+
+df = pd.DataFrame({
+    '좋아함' : [80,90],
+    '안좋아함' : [30,10]
+}, index=['남자','여자'])
+
+print(df.head())
+
+from scipy.stats import chi2_contingency
+
+print(chi2_contingency(df))
+
+data = {
+    '성별' : ['남자']*110 + ['여자']*100 ,
+    '운동' : ['좋아함']*80 + ['안좋아함']*30 + ['좋아함']*90 +['안좋아함']*10
+}
+
+df = pd.DataFrame(data)
+
+print(df.head())
+
+ct = pd.crosstab(df['성별'] , df['운동'])
+print(ct)
+
+from scipy.stats import chi2_contingency
+
+print(chi2_contingency(ct))
+
+df= pd.DataFrame([[50,50],[30,70]])
+
+print(df.head())
+
+from scipy.stats import chi2_contingency
+
+print(chi2_contingency(df))
+
+data = {
+    '학과' : ['통계학과']*100 + ['컴퓨터공학과'] * 100 ,
+    '동아리가입여부' : ['가입']*50 + ['미가입']*50 + ['가입']*30 + ['미가입']*70
+}
+
+df = pd.DataFrame(data)
+
+print(df.head())
+
+df = pd.crosstab(df['학과'],df['동아리가입여부'])
+
+from scipy.stats import chi2_contingency
+print(chi2_contingency(df))
+
+df = pd.DataFrame({
+    '키' : [150,160,170,175,165],
+    '몸무게' : [42,50,70 ,64 ,56]
+})
+
+print(df.corr())
+
+from scipy import stats
+
+print(stats.pearsonr(df['몸무게'] , df['키']))
+
+df = pd.DataFrame({
+    '키' : [150,160,170,175,165,155,172,168,174,158,162,173,156,159,167,163,171,169,176,161],
+    '몸무게' : [42,50,70,64,56,48,68,60,65,52,54,67,49,51,58,55,69,61,66,53]
+})
+
+from statsmodels.formula.api import ols
+model = ols('키 ~ 몸무게' ,df).fit()
+
+print(model.summary())
+
+new_data = pd.DataFrame({'몸무게' :[67]})
+
+print(model.predict(new_data)[0])
+
+df['잔차'] = df['키'] - model.predict(df)
+
+print(df.head())
+
+print(sum(df['잔차']**2))
+
+from sklearn.metrics import mean_squared_error
+pred = model.predict(df['몸무게'])
+mse = mean_squared_error(df['키'],pred)
+
+print('mse' , mse)
+
+
+data = {
+    '매출액' : [300,320,250,360,315,328,310,335,326,280,290,300,315,328,310,335,300,400,500,600],
+    '광고비' : [70,75,30,80,72,77,70,82,70,80,68,90,72,77,70,82,40,20,75,80],
+    '직원수' : [15,16,14,20,19,17,16,19,15,20,14,5,16,17,16,14,30,40,10,50]
+}
+
+df = pd.DataFrame(data)
+
+print(df.head())
+
+from statsmodels.formula.api import ols
+
+model = ols('매출액 ~ 광고비 + 직원수' ,df).fit()
+
+print(model.summary())
+
+print(df['광고비'].corr(df['매출액']))
+
+from scipy.stats import pearsonr
+
+print(pearsonr(df['광고비'] , df['매출액']))
+
+print(model.summary())
+
+
+df2 = pd.DataFrame({
+    '광고비' : [50] ,
+    '직원수' : [20]
+})
+
+print(model.predict(df2))
+
+df['잔차'] = df['매출액'] - model.predict(df)
+
+print(sum(model.resid**2) / len(model.resid))
+
+print(model.conf_int(0.01))

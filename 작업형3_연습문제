@@ -1,0 +1,165 @@
+import pandas as pd
+
+df = pd.DataFrame({
+    'Caffeine(mg)' : [94.2,93.7,95.5,94.0,95.2,94.7,93.5,92.8,94.4,93.8,94.6,93.3,95.1,94.3,94.9,93.9,94.8,95.0,94.0,93.7,94.4,95.1,94.0,93.6]
+})
+
+print(df.mean())
+
+#2
+from scipy import stats
+print(stats.shapiro(df['Caffeine(mg)']).pvalue)
+
+#3
+print(stats.ttest_1samp(df['Caffeine(mg)'],95, alternative='less'))
+
+
+df = pd.DataFrame({
+    '충전기' : ['New'] * 10 + ['Old'] *10 ,
+    '충전시간' : [1.5,1.6,1.4,1.7,1.5,1.6,1.7,1.4,1.6,1.5,1.7,1.8,1.7,1.9,1.8,1.7,1.8,1.9,1.7,1.6]
+})
+
+print(df.head())
+
+from scipy import stats
+
+new_cond = df['충전기'] == 'New'
+old_cond = df['충전기'] == 'Old'
+print(stats.ttest_ind(df[new_cond]['충전시간'] , df[old_cond]['충전시간'] , alternative='less' , equal_var=True))
+
+
+df = pd.DataFrame({
+    'User' : list(range(1,11)),
+    '기존방법' : [60.4,60.7,60.5,60.3,60.8,60.6,60.2,60.5,60.7,60.4],
+    '새로운방법' : [59.8,60.2,60.1,59.9,59.7,58.4,57.0,60.3,59.6,59.8]
+})
+
+print(df.head())
+
+from scipy import stats
+
+cond = df['새로운방법'] - df['기존방법']
+print(cond.mean())
+
+print(stats.ttest_rel(df['새로운방법'] , df['기존방법'] , alternative='less'))
+
+
+df = pd.read_csv('math.csv')
+
+print(df.head())
+
+from scipy import stats
+cond = df['groups'] == 'group_A'
+cond2 = df['groups'] == 'group_B'
+cond3 = df['groups'] == 'group_C'
+cond4 = df['groups'] == 'group_D'
+print(stats.shapiro(df[cond]['scores']))
+print(stats.shapiro(df[cond2]['scores']))
+print(stats.shapiro(df[cond3]['scores']))
+print(stats.shapiro(df[cond4]['scores']))
+
+print(stats.levene(df[cond]['scores'],df[cond2]['scores'],df[cond3]['scores'],df[cond4]['scores']))
+
+from statsmodels.formula.api import ols
+model = ols('scores ~ groups', df).fit()
+
+# from statsmodels.stats.anova import anova_lm
+# print(anova_lm(model))
+print(model.f_pvalue)
+
+print(model.summary2())
+
+
+df = pd.read_csv('tomato2.csv')
+
+print(df.head())
+
+import statsmodels.api as sm
+from statsmodels.formula.api import ols
+
+model = ols('수확량 ~ C(비료유형) * C(물주기)' , df).fit()
+
+print(sm.stats.anova_lm(model))
+
+from scipy import stats
+observed = [550,250,100,70,30]
+expected = [1000*0.6 , 1000*0.25 , 1000*0.08 , 1000*0.05, 1000*0.02]
+
+print(30/1000)
+print(stats.chisquare(observed, expected))
+
+df = pd.DataFrame({
+    '캠프' : ['빅분기'] * 80 + ['정처기']*100,
+    '등록여부' : ['등록']*50 + ['등록안함']*30 + ['등록']*60 + ['등록안함']*40
+})
+
+from scipy import stats
+
+#print(stats.chi2_contingency(df))
+
+df = pd.crosstab(df['캠프'] , df['등록여부'])
+
+print(stats.chi2_contingency(df))
+
+
+df = pd.DataFrame({
+    '할인율' : [28,24,13,0,27,30,10,16,6,5,7,11,11,30,25,4,7,24,19,21,6,10,26,13,15,6,12,6,20,2],
+    '온도' : [15,34,15,22,29,30,14,17,28,29,19,19,34,10,29,28,12,25,32,28,22,16,30,11,16,18,16,33,12,22],
+    '광고비' : [342,666,224,764,148,499,711,596,797,484,986,347,146,362,642,591,846,260,560,941,469,309,730,305,892,147,887,526,525,884],
+    '주문량' : [635,958,525,25,607,872,858,732,1082,863,904,686,699,615,893,830,856,679,918,951,789,583,988,631,866,549,910,946,647,943]
+})
+
+
+
+print(df.head())
+
+from statsmodels.formula.api import ols
+
+print(df.corr())
+model = ols('주문량 ~ 할인율 + 온도 + 광고비' , df).fit()
+
+from statsmodels.api import stats
+print(model.summary())
+print(model.params)
+print(round(model.rsquared,2))
+print(stats.anova_lm(model))
+
+print(model.predict({'할인율' : [10] , '온도' : [20] , '광고비' : [500]}))
+
+df['잔차'] = df['주문량'] - model.predict(df)
+
+print(df.head())
+
+print('잔차제곱합' , sum(df['잔차']**2))
+
+print(model.conf_int(alpha=0.1))
+
+
+df = pd.read_csv('customer_travel.csv')
+
+print(df.head())
+
+midpoint = len(df)//2
+
+print(midpoint)
+
+a = df.iloc[:midpoint]
+b = df.iloc[midpoint:]
+
+print(a.head())
+
+from statsmodels.formula.api import logit
+
+model = logit('target ~ age + service + social + booked', a).fit()
+
+print(model.summary()) 
+#2개
+
+model = logit('target ~ age + booked', a).fit()
+
+print(model.summary())
+
+import numpy as np
+print(np.exp(model.params['booked']*3))
+
+print(model.params[model.pvalues < 0.05].sum())

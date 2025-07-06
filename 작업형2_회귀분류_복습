@@ -1,0 +1,165 @@
+import pandas as pd
+
+# train = pd.read_csv('flight_train.csv')
+
+# test = pd.read_csv('flight_test.csv')
+
+# print(train.head())
+# print(train.isna().sum())
+# print(test.isna().sum())
+
+# print(test.head())
+# target = train.pop('price')
+
+# data = pd.concat([train,test])
+
+# data2 = pd.get_dummies(data)
+
+# ltrain = len(train)
+# train = data2.iloc[:ltrain]
+
+# test = data2.iloc[ltrain:]
+
+# from sklearn.model_selection import train_test_split
+
+# X_train,X_val,y_train,y_val = train_test_split(train,target,test_size=0.02 , random_state=0)
+
+# from sklearn.ensemble import RandomForestRegressor
+
+# rf = RandomForestRegressor()
+
+# rf.fit(X_train,y_train)
+
+# y_pred = rf.predict(X_val)
+
+# from sklearn.metrics import root_mean_squared_error
+
+# rmse = root_mean_squared_error(y_val,y_pred)
+
+# print('rmse' , rmse)
+
+# pred = rf.predict(test)
+
+# submit = pd.DataFrame({'pred' : pred})
+
+# submit.to_csv('result.csv' ,index=False)
+
+train = pd.read_csv('laptop_train.csv')
+
+test = pd.read_csv('laptop_test.csv')
+
+print(train.head())
+print(test.head())
+print(train.info())
+print(test.info())
+
+train['Model'] = train['Model'].fillna(train['Model'].mode()[0])
+train['Series'] = train['Series'].fillna(train['Series'].mode()[0])
+train['Processor'] = train['Processor'].fillna(train['Processor'].mode()[0])
+train['Processor_Gen'] = train['Processor_Gen'].fillna(train['Processor_Gen'].mode()[0])
+train['RAM'] = train['RAM'].fillna(train['RAM'].mode()[0])
+train['Hard_Disk_Capacity'] = train['Hard_Disk_Capacity'].fillna(train['Hard_Disk_Capacity'].mode()[0])
+train['OS'] = train['OS'].fillna(train['OS'].mode()[0])
+
+
+
+test['Model'] = test['Model'].fillna(test['Model'].mode()[0])
+test['Series'] = test['Series'].fillna(test['Series'].mode()[0])
+test['Processor'] = test['Processor'].fillna(test['Processor'].mode()[0])
+test['Processor_Gen'] = test['Processor_Gen'].fillna(test['Processor_Gen'].mode()[0])
+test['RAM'] = test['RAM'].fillna(test['RAM'].mode()[0])
+test['Hard_Disk_Capacity'] = test['Hard_Disk_Capacity'].fillna(test['Hard_Disk_Capacity'].mode()[0])
+test['OS'] = test['OS'].fillna(test['OS'].mode()[0])
+
+
+print(train.isna().sum())
+print(test.isna().sum())
+
+target = train.pop('Price')
+
+data = pd.concat([train,test])
+
+data2 = pd.get_dummies(data)
+
+ltrain = len(train)
+
+train = data2.iloc[:ltrain]
+
+test = data2.iloc[ltrain:]
+
+from sklearn.model_selection import train_test_split
+
+X_train ,X_val , y_train, y_val = train_test_split(train,target,test_size=0.05,random_state=0)
+
+from sklearn.ensemble import RandomForestRegressor
+
+rf = RandomForestRegressor()
+
+rf.fit(X_train,y_train)
+
+y_pred = rf.predict(X_val)
+
+from sklearn.metrics import r2_score
+
+r2 = r2_score(y_val,y_pred)
+
+
+print('r2' , r2)
+
+pred = rf.predict(test)
+
+submit = pd.DataFrame({
+    'pred' : pred})
+
+submit.to_csv('result.csv' , index=False)
+
+
+train = pd.read_csv('car_train.csv')
+
+test = pd.read_csv('car_test.csv')
+
+print(train.head())
+
+print(test.head())
+
+print(train.info())
+print(test.info())
+
+print(train.isna().sum())
+print(test.isna().sum())
+
+target = train.pop('Price')
+data = pd.concat([train,test])
+
+data2 = pd.get_dummies(data)
+
+ltrain = len(train)
+train = data2.iloc[:ltrain]
+
+test = data2.iloc[ltrain:]
+
+from sklearn.model_selection import train_test_split
+
+X_train, X_val , y_train,y_val = train_test_split(train,target,test_size=0.02 ,random_state=0)
+
+from sklearn.ensemble import RandomForestRegressor
+
+rf = RandomForestRegressor()
+
+rf.fit(X_train,y_train)
+
+y_pred = rf.predict(X_val)
+
+from sklearn.metrics import root_mean_squared_log_error
+
+rmsle = root_mean_squared_log_error(y_pred,y_val)
+
+print('rmsle' , rmsle)
+
+pred = rf.predict(test)
+
+submit = pd.DataFrame({
+    'pred' : pred
+})
+
+submit.to_csv('result.csv' , index=False)

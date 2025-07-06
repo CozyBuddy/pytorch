@@ -1,0 +1,21 @@
+import pandas as pd
+
+df = pd.read_csv('health_survey.csv')
+
+print(df.head())
+
+from statsmodels.formula.api import logit
+import statsmodels.api as sm
+
+model = logit('disease ~ age+bmi',data=df).fit()
+
+print(model.summary())
+
+import numpy as np
+
+print(model.params['bmi'])
+print(np.exp(model.params['bmi']))
+
+print(model.llf)
+
+print(model.llf*-2)

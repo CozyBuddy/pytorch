@@ -1,0 +1,146 @@
+import pandas as pd
+
+train = pd.read_csv('train_1.csv')
+test = pd.read_csv('test_1.csv')
+
+print(train.head())
+
+# print(train.shape)
+# print(test.shape)
+
+# print(train.info())
+
+# print(train.describe())
+# print(test.describe())
+
+print(train.describe(include='O'))
+print(test.describe(include='O'))
+
+print(train.isnull().sum())
+print(test.isna().sum())
+
+print(train['income'].value_counts())
+
+print('처리전' , train.shape)
+
+df = train.dropna()
+
+print('처리후' , df.shape)
+
+print(df.isnull().sum())
+
+df = train.dropna(subset=['native.country' , 'workclass'])
+print(df.isnull().sum())
+
+df = train.dropna(axis=1)
+print(df.shape)
+
+print('처리전' , train.shape)
+
+df = train.drop(['native.country','workclass'] , axis=1)
+print('처리후', df.shape)
+
+m = train['workclass'].mode()[0]
+train['workclass'] = train['workclass'].fillna(m)
+print(train.head())
+
+m = train['native.country'].mode()[0]
+train['native.country'] = train['native.country'].fillna(m)
+print(train.isnull().sum())
+
+train['occupation'] = train['occupation'].fillna('X')
+print(train.isnull().sum())
+
+test['workclass'] = test['workclass'].fillna(train['workclass'].mode()[0])
+test['native.country'] = test['native.country'].fillna(train['native.country'].mode()[0])
+test['occupation'] = test['occupation'].fillna('X')
+
+value = int(train['age'].mean())
+print('평균값' , value)
+train['age'] = train['age'].fillna(value)
+test['age'] =  test['age'].fillna(value)
+
+value = int(train['hours.per.week'].median())
+print('중앙값' , value)
+train['hours.per.week'] = train['hours.per.week'].fillna(value)
+test['hours.per.week'] = test['hours.per.week'].fillna(value)
+
+print(train.isnull().sum())
+
+print(train[train['age'] < 0])
+
+train = train[train['age']>0]
+
+print(train.shape)
+#
+
+y_train = train.pop('income')
+
+print(train.shape)
+print(y_train.head())
+
+train_oh = pd.get_dummies(train)
+test_oh = pd.get_dummies(test)
+
+print(train_oh.shape , test_oh.shape, train.shape , test.shape)
+
+data = pd.concat([train,test], axis=0)
+data_oh = pd.get_dummies(data)
+train_oh = data_oh.iloc[:len(train)].copy()
+test_oh = data_oh.iloc[len(train):].copy()
+print(train_oh.shape , test_oh.shape)
+
+cols = train.select_dtypes(include='object').columns
+print(cols)
+
+cols = train.columns[train.dtypes == 'object']
+print(cols)
+
+cols = ['workclass', 'education', 'marital.status', 'occupation',
+       'relationship', 'race', 'sex', 'native.country']
+
+from sklearn.preprocessing import LabelEncoder
+
+for col in cols:
+    le = LabelEncoder()
+    train[col] = le.fit_transform(train[col])
+    test[col] = le.transform(test[col])
+    
+print(train.head())
+
+from sklearn.model_selection import train_test_split
+
+X_train,X_val ,y_train, y_val = train_test_split(train,y_train,test_size=0.2,random_state=0)
+
+print(X_train.shape, X_val.shape, y_train.shape , y_val.shape)
+
+from sklearn.ensemble import RandomForestClassifier
+
+rf = RandomForestClassifier(random_state=0)
+rf.fit(X_train,y_train)
+pred = rf.predict_proba(X_val)
+
+print(rf.classes_)
+print(pred[:10])
+
+from sklearn.metrics import roc_auc_score
+roc_auc = roc_auc_score(y_val,pred[:,1])
+print('roc_auc' , roc_auc)
+
+pred = rf.predict(X_val)
+print(pred[:10])
+
+from sklearn.metrics import accuracy_score
+accuracy = accuracy_score(y_val,pred)
+print('accuracy_score',accuracy)
+
+from sklearn.metrics import f1_score
+f1 = f1_score(y_val,pred,pos_label='>50K')
+print('f1_score',f1)
+
+pred = rf.predict_proba(test)
+
+print(pred)
+
+submit = pd.DataFrame({'pred':pred[:,1]})
+submit.to_csv('result.csv',index=False)

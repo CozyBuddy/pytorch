@@ -1,0 +1,107 @@
+import pandas as pd
+
+train = pd.read_csv('train_2.csv')
+test = pd.read_csv('test_2.csv')
+
+print(train.head())
+
+print(train.shape)
+print(test.shape)
+
+print(train.info())
+
+print(train.describe())
+
+print(train.describe(include='O'))
+
+print(train.isnull().sum())
+
+print(list(train.columns[train.dtypes=='object']))
+
+cols = ['Item_Identifier', 'Item_Fat_Content', 'Item_Type', 'Outlet_Identifier', 'Outlet_Size', 'Outlet_Location_Type', 'Outlet_Type']
+
+target = train.pop('Item_Outlet_Sales')
+
+print(train.shape , test.shape)
+
+df = pd.concat([train,test])
+
+print(df.shape)
+
+from sklearn.preprocessing import LabelEncoder
+
+le = LabelEncoder()
+for col in cols:
+    df[col] = le.fit_transform(df[col])
+    
+print(df.head())
+
+train = df.iloc[:len(train)].copy()
+test = df.iloc[len(train):].copy()
+
+print(train.head())
+
+print(train.isnull().sum())
+
+train['Item_Weight'] = train['Item_Weight'].fillna(train['Item_Weight'].min())
+train['Outlet_Size'] = train['Outlet_Size'].fillna(train['Outlet_Size'].min())
+
+test['Item_Weight'] = test['Item_Weight'].fillna(train['Item_Weight'].min())
+test['Outlet_Size'] = test['Outlet_Size'].fillna(train['Outlet_Size'].min())
+
+train.drop('Item_Identifier' , axis=1 , inplace=True)
+test.drop('Item_Identifier' , axis=1 , inplace=True)
+
+print(train.shape)
+
+from sklearn.model_selection import train_test_split
+
+X_train,X_val,y_train,y_val = train_test_split(train,target,test_size=0.2,random_state=0)
+
+print(X_train.shape , X_val.shape, y_train.shape, y_val.shape)
+
+from sklearn.metrics import mean_squared_error
+from sklearn.metrics import mean_absolute_error
+from sklearn.metrics import r2_score
+from sklearn.metrics import root_mean_squared_error
+
+from sklearn.linear_model import LinearRegression
+lr = LinearRegression()
+lr.fit(X_train,y_train)
+y_pred = lr.predict(X_val)
+
+result = mean_squared_error(y_val,y_pred)
+print(result)
+
+result = mean_absolute_error(y_val,y_pred)
+print(result)
+
+result = r2_score(y_val,y_pred)
+print(result)
+
+result = root_mean_squared_error(y_val,y_pred)
+print(result)
+
+from sklearn.ensemble import RandomForestRegressor
+rf = RandomForestRegressor(random_state=0)
+rf.fit(X_train,y_train)
+y_pred = rf.predict(X_val)
+
+print(y_pred)
+
+result = mean_squared_error(y_val,y_pred)
+print('MSE' , result)
+
+result = mean_absolute_error(y_val,y_pred)
+print("MAE", result)
+
+result = r2_score(y_val,y_pred)
+print('R2' ,result)
+
+result = root_mean_squared_error(y_val,y_pred)
+
+print('RMSE' , result)
+
+pred = rf.predict(test)
+submit = pd.DataFrame({'pred' : pred})
+submit.to_csv('result.csv',index=False)

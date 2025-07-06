@@ -1,0 +1,103 @@
+import pandas as pd
+data = { 
+        '키' : [150,160,170,175,165],
+        '몸무게' : [42,50,70,64,56]
+        }
+
+df = pd.DataFrame(data)
+corr = df.corr()
+print(corr)
+
+print(corr.loc['키', '몸무게'])
+
+from scipy import stats
+
+print(stats.pearsonr(df['몸무게'],df['키']))
+
+data = {
+    '키' : [150,160,170,175,165,155,172,168,174,158,162,173,156,159,167,163,171,169,176,161],
+    '몸무게' : [42,50,70,64,56,48,68,60,65,52,54,67,49,51,58,55,69,61,66,53]
+}
+
+df = pd.DataFrame(data)
+
+from statsmodels.formula.api import ols
+model = ols('키 ~ 몸무게' ,data=df).fit()
+print(model.summary())
+
+data = pd.DataFrame({
+    '몸무게' : [67]
+})
+result = model.predict(data)
+
+print(result)
+
+df['잔차'] = df['키'] - model.predict(df)
+print(sum(df['잔차']**2))
+
+MSE = (df['잔차']**2).mean()
+print(MSE)
+
+from sklearn.metrics import mean_squared_error
+pred = model.predict(df['몸무게'])
+
+mse = mean_squared_error(df['키'],pred)
+print(mse)
+
+print(model.conf_int(alpha=0.1))
+
+
+data = { 
+        '매출액' : [300,320,250,360,315,328,310,335,326,280,290,300,315,328,310,335,300,400,500,600],
+        '광고비' : [70,75,30,80,72,77,70,82,70,80,68,90,72,77,70,82,40,20,75,80],
+        '직원수' : [15,16,14,20,19,17,16,19,15,20,14,5,16,17,16,14,30,40,10,50]}
+
+df = pd.DataFrame(data)
+
+from statsmodels.formula.api import ols
+
+model = ols('매출액 ~ 광고비+직원수', data=df).fit()
+print(model.summary())
+
+print(df['광고비'].corr(df['매출액']))
+
+print(stats.pearsonr(df['광고비'], df['매출액']))
+
+data = {
+    '광고비' : [50] ,
+    '직원수' : [20]
+}
+
+result = model.predict(data)
+
+print(result)
+
+df['잔차'] = df['매출액'] - model.predict(df)
+
+print(sum(df['잔차']**2))
+
+print((df['잔차']**2).mean())
+
+new_data = {
+    '광고비' : [45],
+    '직원수' : [22]
+}
+
+df = pd.DataFrame(new_data)
+
+pred = model.get_prediction(df)
+result = pred.summary_frame()
+
+print(result)
+
+import statsmodels.api as sm
+df = pd.read_csv('study.csv')
+
+print(df.head())
+
+print(df['material_type'].value_counts())
+
+from statsmodels.formula.api import ols
+model = ols('score ~ study_hours + material_type' , data=df).fit()
+
+print(model.summary())

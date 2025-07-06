@@ -1,0 +1,55 @@
+import pandas as pd
+
+train = pd.read_csv('train_3.csv')
+test = pd.read_csv('test_3.csv')
+
+print(test.shape , train.shape)
+
+print(train.head())
+print(list(train.columns))
+print(train.info())
+
+print(train.describe(include='O'))
+
+print(train.isnull().sum())
+
+print(train['Credit_Score'].value_counts())
+
+target = train.pop('Credit_Score')
+
+cols = train.columns[train.dtypes=='object']
+
+from sklearn.preprocessing import LabelEncoder
+for col in cols:
+    le = LabelEncoder()
+    train[col] = le.fit_transform(train[col])
+    test[col] = le.transform(test[col])
+    print(train[col].info())
+    
+print(train.head())
+
+from sklearn.model_selection import train_test_split
+
+X_train,X_val,y_train,y_val = train_test_split(train,target,test_size=0.2 , random_state=0)
+
+print(X_train.shape , X_val.shape , y_train.shape , y_val.shape)
+
+from sklearn.metrics import accuracy_score
+from sklearn.metrics import f1_score
+
+from sklearn.ensemble import RandomForestClassifier
+rf = RandomForestClassifier(random_state=0)
+rf.fit(X_train,y_train)
+y_pred = rf.predict(X_val)
+
+print(y_pred)
+
+accuracy = accuracy_score(y_val,y_pred)
+print('accuracy_score' , accuracy)
+
+f1 = f1_score(y_val,y_pred, average='macro')
+print(f1)
+
+pred = rf.predict(test)
+submit = pd.DataFrame({'pred' : pred})
+submit.to_csv('result3.csv' , index=False)

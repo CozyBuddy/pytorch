@@ -1,0 +1,127 @@
+# import pandas as pd
+
+# df = pd.DataFrame({
+#     'weights' : [122,121,120,119,125,115,121,118,117,127,123,129,119,124,114,126,122,124,121,116,120,123,127,118,122,117,124,125,123]
+# })
+
+# from scipy import stats
+# t_statistic,p_value = stats.ttest_1samp(df['weights'],120)
+
+# print('t통계량' , t_statistic)
+# print('유의수준' , p_value)
+
+# print(stats.ttest_1samp(df['weights'],120))
+
+import pandas as pd
+df = pd.DataFrame({
+    'weights' : [125,126,118,124,117,127,123,122,119,142]
+})
+
+from scipy import stats
+
+print(stats.shapiro(df['weights'])) #정규분포를 따르는지 확인
+print(stats.wilcoxon(df['weights']-120,alternative='less'))
+print(stats.ttest_1samp(df['weights'],120 ,alternative='less'))
+
+# print(stats.ttest_1samp(df['weights'],120,alternative=''))
+
+from scipy import stats
+
+df = pd.DataFrame({
+    'before' : [85,90,92,88,86,89,83,87],
+    'after' : [85.5,89.9,92.6,89.5,85.8,88.8,84.6,87.8]
+})
+
+from scipy import stats
+
+print(stats.ttest_rel(df['before'],df['after'],alternative='less'))
+
+
+from scipy import stats
+
+class1 = [85,90,92,88,86,89,83,87]
+class2 = [80,82,88,85,84]
+
+print(stats.ttest_ind(class1,class2,alternative='greater' ,equal_var=False))
+
+# print(dir(stats)) 
+
+# print(stats.ttest_ind.__doc__)
+
+print(stats.ttest_ind(class1,class2,equal_var=False))
+
+from scipy import stats
+
+df = pd.DataFrame({
+    'A' : [10.5,11.3,10.8,9.6,11.1,10.2,10.9,11.4,10.5,10.3],
+    'B' : [11.0,12.4,12.1,13.2,12.5,11.8,12.2,12.9,12.4,12.3],
+    'C' : [11.2,11.7 ,11.6 , 10.9,11.3,11.1,10.8, 11.5,11.4,11.0] ,
+    'D' : [9.8,9.4,9.1,9.5,9.6,9.9,9.2,9.7,9.3,9.4]
+})
+
+print(stats.shapiro(df['A']))
+print(stats.shapiro(df['B']))
+print(stats.shapiro(df['C']))
+print(stats.shapiro(df['D']))
+
+print(stats.levene(df['A'],df['B'],df['C'],df['D']))
+print(stats.f_oneway(df['A'],df['B'],df['C'],df['D']))
+
+
+df = pd.read_csv('fertilizer.csv')
+
+from statsmodels.formula.api import ols
+from statsmodels.stats.anova import anova_lm
+model = ols('성장~ C(비료)' ,df).fit()
+print(anova_lm(model))
+
+import statsmodels.api as sm
+from statsmodels.formula.api import ols
+
+df = pd.read_csv('tree.csv')
+
+model = ols('성장률 ~ C(나무) + C(비료) + C(나무):C(비료)' , data=df).fit()
+
+anova_table = sm.stats.anova_lm(model)
+
+print(anova_table)
+
+from scipy import stats
+observed = [150,120,30]
+
+expected = [0.5*300 ,0.35*300,0.15*300]
+
+print(stats.chisquare(observed,expected))
+
+df = [[80,30],[90,10]]
+print(stats.chi2_contingency(df))
+
+data = {
+    '성별' : ['남자']*110 + ['여자']*100,
+    '운동' : ['좋아함']*80 + ['좋아하지않음']*30 + ['좋아함']*90 + ['좋아하지않음']*10
+}
+
+df = pd.DataFrame(data)
+
+
+print(df.head())
+
+df = pd.crosstab(df['성별'],df['운동'])
+
+print(df.head())
+
+print(stats.chi2_contingency(df))
+
+df = pd.DataFrame([[50,50],[30,70]])
+
+print(stats.chi2_contingency(df))
+
+data = {
+    '학과' : ['통계학과']*100 + ['컴퓨터학과']*100 ,
+    '동아리가입여부' : ['가입']*50 + ['미가입']*50 + ['가입']*30 + ['미가입']*70
+}
+
+df = pd.DataFrame(data)
+
+df = pd.crosstab(df['학과'],df['동아리가입여부'])
+print(stats.chi2_contingency(df))

@@ -1,0 +1,128 @@
+import pandas as pd
+
+train = pd.read_csv('diabetes_train.csv')
+test = pd.read_csv('diabetes_test.csv')
+
+print(train.isnull().sum())
+print(test.isnull().sum())
+
+print(train.head())
+print(test.head())
+
+target = train.pop('Outcome')
+from sklearn.model_selection import train_test_split
+X_train,X_val,y_train,y_val = train_test_split(train,target, test_size=0.2 , random_state=0)
+from sklearn.ensemble import RandomForestClassifier
+
+rf = RandomForestClassifier(random_state=0)
+rf.fit(X_train,y_train)
+y_pred = rf.predict_proba(X_val)
+
+print(y_pred)
+
+result = rf.predict_proba(test)
+submit = pd.DataFrame({'pred' : result[:,1]})
+submit.to_csv('result.csv', index=False)
+
+from sklearn.metrics import roc_auc_score
+roc_auc = roc_auc_score(y_val,y_pred[:,1])
+print(roc_auc)
+
+
+
+train = pd.read_csv('hr_train.csv')
+test = pd.read_csv('hr_test.csv')
+
+print(train.head())
+print(train.shape)
+print(test.shape)
+print(train.describe(include='O'))
+print(train.info)
+
+print(train.info())
+print(test.info())
+print(test.isnull().sum())
+cols = train.columns[train.dtypes == 'object']
+print(list(cols))
+train = train.fillna('X')
+test= test.fillna('X')
+cols = ['city', 'gender', 'relevent_experience', 'enrolled_university', 'education_level', 'major_discipline', 'experience', 'company_size', 'company_type', 'last_new_job']
+target = train.pop('target')
+
+combined = pd.concat([train,test])
+combined_dummies = pd.get_dummies(combined)
+n_train = len(train)
+train = combined_dummies[:n_train]
+test = combined_dummies[n_train:]
+    
+from sklearn.model_selection import train_test_split
+
+X_train,X_val,y_train,y_val = train_test_split(train,target, test_size=0.2 , random_state=0)
+
+from sklearn.ensemble import RandomForestClassifier
+
+rf = RandomForestClassifier()
+rf.fit(X_train,y_train)
+y_pred = rf.predict_proba(X_val)
+
+print(result)
+from sklearn.metrics import roc_auc_score
+
+roc_auc = roc_auc_score(y_val, y_pred[:,1])
+
+y_pred = rf.predict_proba(test)
+
+submit = pd.DataFrame({'pred' : y_pred[: ,1]})
+submit.to_csv('result.csv', index=False)
+
+
+
+print(roc_auc)
+
+train = pd.read_csv('creditcard_train.csv')
+test = pd.read_csv('creditcard_test.csv')
+
+train.drop('ID',axis=1 ,inplace=True)
+test.drop('ID',axis=1 ,inplace=True)
+print(train.isnull().sum())
+print(test.isnull().sum())
+
+train['OCCUPATION_TYPE'] = train['OCCUPATION_TYPE'].fillna(train['OCCUPATION_TYPE'].mode()[0])
+
+print(train.isnull().sum())
+print(train.info())
+print(test.info())
+
+cols = list(train.columns[train.dtypes=='object'])
+
+print(cols)
+target = train.pop('STATUS')
+combined = pd.concat([train,test])
+
+combined_as = pd.get_dummies(combined)
+n_train = len(train)
+
+train = combined_as[:n_train]
+test = combined_as[n_train:]
+
+
+
+from sklearn.model_selection import train_test_split
+X_train,X_val, y_train,y_val = train_test_split(train,target,test_size=0.2 , random_state=0)
+from sklearn.ensemble import RandomForestClassifier
+
+rf = RandomForestClassifier()
+rf.fit(X_train,y_train)
+
+result = rf.predict(X_val)
+
+print(result)
+
+y_pred = rf.predict(test)
+submit = pd.DataFrame({'pred' : y_pred})
+submit.to_csv('result.csv', index=False)
+
+from sklearn.metrics import f1_score
+
+score = f1_score(y_val,result)
+print('스코어',score)
