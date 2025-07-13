@@ -41,8 +41,8 @@ train_loader = DataLoader(dataset = train_dataset , batch_size=batch_size , shuf
 valid_loader = DataLoader(dataset=test_dataset ,batch_size= batch_size ,shuffle=True)
 test_loader = DataLoader(dataset=test_dataset , batch_size= batch_size , shuffle=True)
 
-batch_size = 100
-n_iters =6000
+batch_size = 500
+n_iters =9000
 num_epochs = n_iters / (len(train_dataset) / batch_size)
 
 num_epochs = int(num_epochs)
@@ -131,7 +131,7 @@ if torch.cuda.is_available():
     model.cuda()
 
 criterion = nn.CrossEntropyLoss()
-learning_rate = 0.1
+learning_rate = 0.001
 optimizer = torch.optim.Adam(model.parameters() , lr=learning_rate)
 
 
