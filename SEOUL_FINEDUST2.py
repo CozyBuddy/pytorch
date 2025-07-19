@@ -99,8 +99,8 @@ y_train, y_test = y_scaled[:trainC], y_scaled[trainC:]
 print(X_train.shape, y_train.shape)
 
 # # 텐서로 변환 + 3D 입력 형식 맞추기 (LSTM용)
-X_train_tensors_f = torch.tensor(X_train.values, dtype=torch.float32).unsqueeze(1)  # (batch, seq, features) batch_size가 데이터갯수 200이고 seq 가 1 이되고 features가 4가됨.
-X_test_tensors_f = torch.tensor(X_test.values, dtype=torch.float32).unsqueeze(1)
+X_train_tensors_f = torch.tensor(X_train, dtype=torch.float32).unsqueeze(1)  # (batch, seq, features) batch_size가 데이터갯수 200이고 seq 가 1 이되고 features가 4가됨.
+X_test_tensors_f = torch.tensor(X_test, dtype=torch.float32).unsqueeze(1)
 
 y_train_tensors = torch.tensor(y_train, dtype=torch.float32)
 y_test_tensors = torch.tensor(y_test, dtype=torch.float32)
@@ -143,7 +143,7 @@ class LSTM(nn.Module):
 num_epochs = 1000
 learning_rate = 0.0001
 
-input_size = 1 ## 독립변수 갯수
+input_size = 8 ## 독립변수 갯수
 hidden_size = 15 ## 각 LSTM 층 안에서 한 시점마다 기억하는 벡터(은닉 상태)의 크기(길이) LSTM이 스스로 어떤 걸 기억할지 결정해서 업데이트 하는공간
 num_layers = 3 ## 은닉층 갯수
 
@@ -165,16 +165,16 @@ for epoch in range(num_epochs):
         print('Epoch : %d , loss : %1.5f' % (epoch , loss.item()))
 
 
-# #df_x_ss = ss.transform(df.iloc[: , :-1])
+df_x_ss = ss.transform(df.iloc[: , 1:])
 df_y_ms = ms.transform(df.iloc[: , [0]])
 
-# #df_x_ss = Variable(torch.Tensor(df_x_ss))
-df_y_ms = torch.tensor(df_y_ms)
+df_x_ss = torch.tensor(df_x_ss ,dtype=torch.float32).unsqueeze(1)
+df_y_ms = torch.tensor(df_y_ms,dtype=torch.float32).unsqueeze(1)
 
 # df_x_ss = torch.reshape(df_x_ss , (df_x_ss.shape[0] ,1 , df_x_ss.shape[1]))
-df_x = torch.tensor(X_scaled.values , dtype=torch.float32).unsqueeze(1)
+# df_x = torch.tensor(X_scaled.values , dtype=torch.float32).unsqueeze(1)
 
-train_predict = model(df_x)
+train_predict = model(df_x_ss)
 predicted = train_predict.data.numpy() 
 
 predicted_inv = ms.inverse_transform(predicted)  # y 스케일 역변환
