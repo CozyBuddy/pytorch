@@ -20,6 +20,7 @@ data5 = pd.read_csv('서울시 대기질 자료 제공_2022.csv' , encoding='euc
 data6 = pd.read_csv('서울시 대기질 자료 제공_2023.csv' , encoding='euc-kr')
 data7 = pd.read_csv('서울시 대기질 자료 제공_2024.csv' , encoding='euc-kr')
 
+print(data1.info())
 print(data1.head())
 print(data2.head())
 print(data3.head())
@@ -48,7 +49,7 @@ data6 = data6[cond6]
 data7 = data7[cond7]
 df = pd.concat([data1,data2,data3,data4,data5,data6,data7])
 
-
+print(df.head())
 df['일시'] = pd.to_datetime(df['일시'])
 
 print(df.info())
