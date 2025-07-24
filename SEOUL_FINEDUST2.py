@@ -11,7 +11,7 @@ from torch.autograd import Variable
 
 from sklearn.preprocessing import StandardScaler , MinMaxScaler
 from sklearn.model_selection import train_test_split
-
+import joblib
 data1 = pd.read_csv('서울시 대기질 자료 제공_2008-2011.csv' , encoding='euc-kr')
 data2 = pd.read_csv('서울시 대기질 자료 제공_2012-2015.csv', encoding='euc-kr')
 data3 = pd.read_csv('서울시 대기질 자료 제공_2016-2019.csv' , encoding='euc-kr')
@@ -54,14 +54,19 @@ df['일시'] = pd.to_datetime(df['일시'])
 print(df.info())
 print(df.head())
 
+device = torch.device("cuda:0" if torch.cuda.is_available() else 'cpu')
 df['year'] = df['일시'].dt.year
 df['month'] = df['일시'].dt.month
 df['day'] = df['일시'].dt.day
 df['hour'] = df['일시'].dt.hour
 df['dayofweek'] = df['일시'].dt.dayofweek
 
-df['year_cos'] =  np.cos( 2 * np.pi*df['year']/12)
-df['year_sin'] =  np.sin( 2 * np.pi*df['year']/12)
+df['month_cos'] =  np.cos( 2 * np.pi*df['month']/12)
+df['month_sin'] =  np.sin( 2 * np.pi*df['month']/12)
+
+df['day_cos'] =  np.cos( 2 * np.pi*df['day']/31)
+df['day_sin'] =  np.sin( 2 * np.pi*df['day']/31)
+
 
 df['hour_cos'] =  np.cos( 2 * np.pi*df['hour']/24)
 df['hour_sin'] =  np.sin( 2 * np.pi*df['hour']/24)
@@ -69,7 +74,7 @@ df['hour_sin'] =  np.sin( 2 * np.pi*df['hour']/24)
 df['dayofweek_cos'] =  np.cos( 2 * np.pi*df['dayofweek']/7)
 df['dayofweek_sin'] =  np.sin( 2 * np.pi*df['dayofweek']/7)
 
-df.drop(columns=['year','hour','dayofweek','일시','구분','미세먼지(PM10)'],inplace=True)
+df.drop(columns=['year','day','hour','month','dayofweek','일시','구분','미세먼지(PM10)'],inplace=True)
 
 print(df.head())
 #df['측정일시'] = pd.to_datetime(df['측정일시'])
@@ -86,12 +91,25 @@ print(X.head())
 print(y.head())
 
 # # 스케일링
-ms = MinMaxScaler()
+ms = MinMaxScaler(feature_range=(0, 10))
 ss = StandardScaler()
 
 X_scaled = ss.fit_transform(X)
 y_scaled = ms.fit_transform(y)  
 
+joblib.dump(ss, 'fine_scaler.pkl')
+joblib.dump(ms, 'fine_scaler2.pkl')
+def create_seq(x,y, seq_len):
+    xs = []
+    ys =[]
+    for i in range(len(x) - seq_len):
+        x_seq = x[i:(i+seq_len)]
+        y_seq = y[i+seq_len]
+        xs.append(x_seq)
+        ys.append(y_seq)
+    return np.array(xs) , np.array(ys)
+    
+X_scaled , y_scaled= create_seq(X_scaled , y_scaled ,1)
 # # 훈련/테스트 분할
 X_train, X_test = X_scaled[:trainC], X_scaled[trainC:]
 y_train, y_test = y_scaled[:trainC], y_scaled[trainC:]
@@ -99,11 +117,11 @@ y_train, y_test = y_scaled[:trainC], y_scaled[trainC:]
 print(X_train.shape, y_train.shape)
 
 # # 텐서로 변환 + 3D 입력 형식 맞추기 (LSTM용)
-X_train_tensors_f = torch.tensor(X_train, dtype=torch.float32).unsqueeze(1)  # (batch, seq, features) batch_size가 데이터갯수 200이고 seq 가 1 이되고 features가 4가됨.
-X_test_tensors_f = torch.tensor(X_test, dtype=torch.float32).unsqueeze(1)
+X_train_tensors_f = torch.tensor(X_train, dtype=torch.float32).to(device)  # (batch, seq, features) batch_size가 데이터갯수 200이고 seq 가 1 이되고 features가 4가됨.
+X_test_tensors_f = torch.tensor(X_test, dtype=torch.float32).to(device)
 
-y_train_tensors = torch.tensor(y_train, dtype=torch.float32)
-y_test_tensors = torch.tensor(y_test, dtype=torch.float32)
+y_train_tensors = torch.tensor(y_train, dtype=torch.float32).to(device)
+y_test_tensors = torch.tensor(y_test, dtype=torch.float32).to(device)
 
 # #### unsqueeze
 # #  x= [1,2,3] 일때 unsqueeze(-1) 하면 맨 뒤에 차원을 추가 , 즉 지금 shape이 3 이므로 3,1 3행 1열 이됨
@@ -129,8 +147,8 @@ class LSTM(nn.Module):
 
     def forward(self , x):
         #print(x.size(0))
-        h_0 = torch.zeros(self.num_layers , x.size(0) , self.hidden_size) ## 0을 가득한 tensor을 생성할때 순서는 고정 x.size(0) 은 batch_size 임
-        c_0  =torch.zeros(self.num_layers , x.size(0) , self.hidden_size)
+        h_0 = torch.zeros(self.num_layers , x.size(0) , self.hidden_size).to(device) ## 0을 가득한 tensor을 생성할때 순서는 고정 x.size(0) 은 batch_size 임
+        c_0  =torch.zeros(self.num_layers , x.size(0) , self.hidden_size).to(device)
         output , (hn ,cn) = self.lstm(x , (h_0 ,  c_0)) ## 문법상 이렇게 변수를 줘야함.
         hn = hn[-1] 
         out = self.relu(hn)
@@ -140,18 +158,18 @@ class LSTM(nn.Module):
         return out
     
 
-num_epochs = 1000
-learning_rate = 0.0001
+num_epochs = 10000
+learning_rate = 0.005
 
 input_size = 8 ## 독립변수 갯수
-hidden_size = 15 ## 각 LSTM 층 안에서 한 시점마다 기억하는 벡터(은닉 상태)의 크기(길이) LSTM이 스스로 어떤 걸 기억할지 결정해서 업데이트 하는공간
-num_layers = 3 ## 은닉층 갯수
+hidden_size = 10 ## 각 LSTM 층 안에서 한 시점마다 기억하는 벡터(은닉 상태)의 크기(길이) LSTM이 스스로 어떤 걸 기억할지 결정해서 업데이트 하는공간
+num_layers = 1 ## 은닉층 갯수
 
 num_classes = 1 ## 회귀문제에서는 항상 0 분류문제에서는 분류되는 클래스 갯수를 넣음
 
-model = LSTM(num_classes , input_size , hidden_size , num_layers , X_train_tensors_f.shape[1])
+model = LSTM(num_classes , input_size , hidden_size , num_layers , X_train_tensors_f.shape[1]).to(device)
 
-criterion = torch.nn.MSELoss()
+criterion = torch.nn.SmoothL1Loss()
 optimizer = torch.optim.Adam(model.parameters() , lr=learning_rate)
 
 for epoch in range(num_epochs):
@@ -168,18 +186,22 @@ for epoch in range(num_epochs):
 df_x_ss = ss.transform(df.iloc[: , 1:])
 df_y_ms = ms.transform(df.iloc[: , [0]])
 
-df_x_ss = torch.tensor(df_x_ss ,dtype=torch.float32).unsqueeze(1)
-df_y_ms = torch.tensor(df_y_ms,dtype=torch.float32).unsqueeze(1)
+df_x_ss , df_y_ms= create_seq(df_x_ss , df_y_ms , 1)
+
+df_x_ss = torch.tensor(df_x_ss ,dtype=torch.float32).to(device)
+df_y_ms = torch.tensor(df_y_ms,dtype=torch.float32).to(device)
 
 # df_x_ss = torch.reshape(df_x_ss , (df_x_ss.shape[0] ,1 , df_x_ss.shape[1]))
 # df_x = torch.tensor(X_scaled.values , dtype=torch.float32).unsqueeze(1)
 
-train_predict = model(df_x_ss)
-predicted = train_predict.data.numpy() 
+train_predict = model(df_x_ss).to(device)
+predicted = train_predict.cpu().data.numpy() 
 
 predicted_inv = ms.inverse_transform(predicted)  # y 스케일 역변환
-label_y_inv = ms.inverse_transform(df_y_ms.numpy())  # 실제 y값도 역변환
+print(df_y_ms.cpu().numpy())
+label_y_inv = ms.inverse_transform(df_y_ms.cpu().numpy().reshape(-1, 1))  # 실제 y값도 역변환
 
+torch.save(model.state_dict(), 'finedust.pth')
 
 plt.figure(figsize=(12,6))
 plt.plot(label_y_inv, label='Actual Data')
