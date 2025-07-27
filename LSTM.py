@@ -37,15 +37,14 @@ test_dataset = MNIST(download_root , transform=mnist_transform , train=False , d
 
 batch_size = 64
 
-train_loader = DataLoader(dataset = train_dataset , batch_size=batch_size , shuffle=True)
+train_loader = DataLoader(dataset=train_dataset , batch_size=batch_size , shuffle=True)
 valid_loader = DataLoader(dataset=test_dataset ,batch_size= batch_size ,shuffle=True)
 test_loader = DataLoader(dataset=test_dataset , batch_size= batch_size , shuffle=True)
 
 batch_size = 100
 n_iters =5000
-num_epochs = n_iters / (len(train_dataset) / batch_size)
+num_epochs = int(n_iters / (len(train_dataset) / batch_size))
 
-num_epochs = int(num_epochs)
 
 class LSTMCell(nn.Module):
     def __init__(self, input_size ,hidden_size , bias=True):
