@@ -40,3 +40,13 @@ for epoch in range(10):
 
     if (epoch+1) % 1000 ==0:
         print(f'Epoch : {epoch+1 : 4d} ,Weight : {weight.item(): .3f}, Bias: {bias.item():.3f} , Cost: {cost:.3f}')
+
+from torch import nn
+
+# layer = torch.nn.Linear(
+#     in_features,
+#     out_features,
+#     bias=True,
+#     device=None,
+#     dtype=None
+# )
