@@ -1,0 +1,84 @@
+import pandas as pd
+
+df = pd.DataFrame({
+    'weights' : [122,121,120,119,125,115,121,118,117,127,
+                 123,129,119,124,114,126,122,124,121,116,
+                 120,123,127,118,122,117,124,125,123]
+})
+
+from scipy import stats
+
+result = stats.ttest_1samp(df['weights'],120)
+
+print(result)
+
+result = stats.ttest_1samp(df['weights'],120 , alternative='greater')
+
+print(result)
+
+result = stats.ttest_1samp(df['weights'],120 , alternative='less')
+
+print(result)
+
+df = pd.DataFrame({
+    'weights' : [125,126,118,124,117,127,123,122,119,142]
+})
+
+from scipy import stats
+
+result = stats.shapiro(df['weights'])
+
+print('result' , result)
+
+result = stats.wilcoxon(df['weights'] -120 , alternative='less')
+
+print('result2' , result)
+
+
+df = pd.DataFrame({
+    'before' : [85,90,92,88,86,89,83,87] ,
+    'after' : [85.5,89.9,92.6,89.5,85.8,88.8,84.6,87.8]
+    
+})
+from scipy import stats
+
+result = stats.ttest_rel(df['before'] , df['after'] , alternative='less')
+
+print('result' , result)
+
+print( stats.ttest_rel(df['after'] , df['before'] , alternative='greater'))
+
+df = pd.DataFrame({
+    'before' : [85,90,92,88,86,89,83,87] ,
+    'after' : [86,92,94,89,84,90,84,88]
+    
+})
+
+from scipy import stats
+
+print(stats.shapiro(df['after'] - df['before'] ))
+
+print(stats.wilcoxon(df['after'] , df['before'] , alternative='greater'))
+
+from scipy import stats
+
+class1 = [85,90,92,88,86,89,83,87]
+
+class2 = [80,82,88,85,84]
+
+from scipy import stats
+
+result = stats.ttest_ind(class1,class2, equal_var=False)
+
+print(result)
+
+result = stats.ttest_ind(class1,class2, equal_var=False , alternative='greater')
+
+print(result)
+
+
+print(stats.shapiro(class1) ,stats.shapiro(class2))
+
+print(stats.levene(class1,class2))
+
+print(stats.ttest_ind(class2,class1 , equal_var=False, alternative='greater'))

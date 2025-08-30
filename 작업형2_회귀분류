@@ -1,0 +1,153 @@
+# import pandas as pd
+
+# train = pd.read_csv('flight_train.csv')
+# test = pd.read_csv('flight_test.csv')
+
+# # print(train.info())
+# # print(train.isnull().sum())
+# # print(test.isnull().sum())
+
+# # print(train.describe())
+# # print(test.describe())
+
+# # print(train.shape)
+# # print(test.shape)
+
+# print(train['flight'].nunique())
+# print(test['flight'].nunique())
+# target = train.pop('price')
+
+# combined = pd.concat([train,test])
+
+# combined_as = pd.get_dummies(combined)
+
+# n_train = len(train)
+
+# train = combined_as[:n_train]
+# test = combined_as[n_train:]
+
+# from sklearn.model_selection import train_test_split
+
+# X_train,X_val , y_train , y_val = train_test_split(train,target,test_size=0.2 , random_state=0)
+
+# from sklearn.ensemble import RandomForestRegressor
+
+# rf = RandomForestRegressor()
+
+# rf.fit(X_train,y_train)
+
+# y_pred = rf.predict(X_val)
+
+# from sklearn.metrics import root_mean_squared_error
+
+# mse = root_mean_squared_error(y_pred,y_val)
+
+# print(mse)
+
+# pred = rf.predict(test)
+
+# submit = pd.DataFrame({'pred' : pred})
+
+# submit.to_csv('result.csv', index=False)
+
+import pandas as pd
+train = pd.read_csv('laptop_train.csv')
+test = pd.read_csv('laptop_test.csv')
+
+print(train.info())
+print(test.info())
+
+print(train.describe())
+
+print(list(train.columns))
+
+cols = ['Brand', 'Model', 'Series', 'Processor', 'Processor_Gen', 'RAM', 'Hard_Disk_Capacity', 'OS', 'Rating']
+#train = train.dropna(subset=cols)
+# train = train.dropna()
+for col in cols:
+    train[col] = train[col].fillna(train[col].mode()[0])
+    test[col] = test[col].fillna(test[col].mode()[0])
+    
+print(train.isnull().sum())
+print(test.isnull().sum())
+
+target = train.pop('Price')
+
+combined = pd.concat([train,test])
+combined_as = pd.get_dummies(combined)
+
+n_train = len(train)
+
+train = combined_as[:n_train]
+test = combined_as[n_train:]
+
+from sklearn.model_selection import train_test_split
+
+X_train,X_val , y_train,y_val = train_test_split(train,target, test_size=0.2 , random_state=0)
+
+from sklearn.ensemble import RandomForestRegressor
+
+rf = RandomForestRegressor()
+
+rf.fit(X_train,y_train)
+y_pred = rf.predict(X_val)
+
+from sklearn.metrics import r2_score
+
+r2 = r2_score(y_pred,y_val)
+
+print(r2)
+
+pred = rf.predict(test)
+
+submit = pd.DataFrame({'pred' : pred})
+submit.to_csv('result.csv' , index=False)
+
+
+train = pd.read_csv('car_train.csv')
+test = pd.read_csv('car_test.csv')
+
+print(train.info())
+print(test.info())
+
+print(train.isnull().sum())
+print(test.isnull().sum())
+
+
+target = train.pop('Price')
+combined = pd.concat([train,test])
+
+combined_as = pd.get_dummies(combined)
+
+n_train = len(train)
+
+train = combined_as[:n_train]
+
+test = combined_as[n_train:]
+
+
+from sklearn.model_selection import train_test_split
+
+X_train,X_val , y_train, y_val = train_test_split(train,target,test_size=0.1 , random_state=0)
+
+from sklearn.ensemble import RandomForestRegressor
+
+rf = RandomForestRegressor()
+
+rf.fit(X_train,y_train)
+
+y_pred = rf.predict(X_val)
+
+print(y_pred)
+
+from sklearn.metrics import root_mean_squared_log_error
+
+rmsle = root_mean_squared_log_error(y_pred,y_val)
+
+print(rmsle)
+
+pred = rf.predict(test)
+
+submit = pd.DataFrame({'pred' : pred})
+
+submit.to_csv('result.csv', index=False)
