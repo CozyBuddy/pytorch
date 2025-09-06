@@ -2,28 +2,28 @@
 import sentencepiece as spm
 import pandas as pd
 
-spm.SentencePieceTrainer.train(
-    input='korean_corpus.txt',
-    model_prefix='spm_ko',
-    vocab_size=8000,
-    model_type='unigram',
-    user_defined_symbols=['<bos>', '<eos>'],
-    pad_id=3,
-    pad_piece='<pad>'
-)
+# spm.SentencePieceTrainer.train(
+#     input='ko_corpus.txt',
+#     model_prefix='spm_ko',
+#     vocab_size=32000,
+#     model_type='unigram',
+#     user_defined_symbols=['<bos>', '<eos>'],
+#     pad_id=3,
+#     pad_piece='<pad>'
+# )
 
 sp = spm.SentencePieceProcessor()
 sp.load("spm_ko.model")
 
-spm.SentencePieceTrainer.train(
-    input='english_corpus.txt',
-    model_prefix='spm_en',
-    vocab_size=8000,
-    model_type='unigram',
-    pad_id=3,
-    pad_piece='<pad>',
-    user_defined_symbols=['<bos>', '<eos>']
-)
+# spm.SentencePieceTrainer.train(
+#     input='english_corpus.txt',
+#     model_prefix='spm_en',
+#     vocab_size=16000,
+#     model_type='unigram',
+#     pad_id=3,
+#     pad_piece='<pad>',
+#     user_defined_symbols=['<bos>', '<eos>']
+# )
 
 
 sp2 = spm.SentencePieceProcessor()
@@ -31,6 +31,7 @@ sp2.load("spm_en.model")
 
 
 SRC_LANGUAGE = 'ko'
+
 TGT_LANGUAGE = 'en'
 UNK_IDX , BOS_IDX , EOS_IDX = sp.unk_id()  , sp.bos_id(), sp.eos_id()
 PAD_IDX = sp.piece_to_id('<pad>') 
@@ -43,13 +44,37 @@ print(PAD_IDX)
 # }
 
 
-df = pd.read_json('일상생활및구어체_한영_train_set.json')
-df = df['data'].apply(pd.Series)
+# df = pd.read_json('일상생활및구어체_한영_train_set.json')
+# df2 = pd.read_json('일상생활및구어체_한영_valid_set.json')
+
+# df = pd.concat([df,df2],ignore_index=True)
+
+df0 = pd.read_json("일상생활및구어체_한영_train_set.json")  # 파일 경로 맞춰주세요
+df01 = pd.read_json('일상생활및구어체_한영_valid_set.json')
+df = pd.read_excel('korean_english_malmungchi/1_구어체(1).xlsx')
+df2 = pd.read_excel('korean_english_malmungchi/1_구어체(2).xlsx')
+df3 = pd.read_excel('korean_english_malmungchi/2_대화체.xlsx')
+df4 = pd.read_excel('korean_english_malmungchi/3_문어체_뉴스(1)_200226.xlsx')
+df5 = pd.read_excel('korean_english_malmungchi/3_문어체_뉴스(2).xlsx')
+df6 = pd.read_excel('korean_english_malmungchi/3_문어체_뉴스(3).xlsx')
+df7 = pd.read_excel('korean_english_malmungchi/3_문어체_뉴스(4).xlsx')
+df8 = pd.read_excel('korean_english_malmungchi/4_문어체_한국문화.xlsx')
+df9 = pd.read_excel('korean_english_malmungchi/5_문어체_조례.xlsx')
+df10 = pd.read_excel('korean_english_malmungchi/6_문어체_지자체웹사이트.xlsx')
+
+df2 = pd.concat([df,df2,df3,df4,df5,df6,df7,df8,df9,df10])
+
+df0 = pd.concat([df0,df01])
+df0['원문'] = df0['data'].apply(pd.Series)['ko_original']
+df0['번역문'] = df0['data'].apply(pd.Series)['mt']
+
+df = pd.concat([df0,df2])
+#df = df['data'].apply(pd.Series)
 # print(df)
 
-df['ko_original'] = df['ko_original'].str.replace('>','')
-df['mt'] = df['mt'].str.replace('>','')
-train_iter = list(zip(df['ko_original'] ,df['mt']))
+# df['원문'] = df['원문'].str.replace('>','')
+# df['mt'] = df['mt'].str.replace('>','')
+train_iter = list(zip(df['원문'] ,df['번역문']))
 # print(train_iter)
 
 # def generate_tokens(text_iter, language):
@@ -83,7 +108,7 @@ import torch
 from torch import nn
 
 class PositionalEncoding(nn.Module):
-    def __init__(self,d_model , max_len , dropout=0.3):
+    def __init__(self,d_model , max_len , dropout=0.1):
         super().__init__()
         self.dropout = nn.Dropout(p=dropout)
         position = torch.arange(max_len).unsqueeze(1)
@@ -166,18 +191,18 @@ print(sp.get_piece_size())
 
 print(sp.unk_id() , sp.pad_id() , sp.bos_id(), sp.eos_id())
 model = Seq2SeqTransformer(
-    num_encoder_layers=3,
-    num_decoder_layers=3,
+    num_encoder_layers=5,
+    num_decoder_layers=5,
     emb_size=512,
     max_len=512,
     nhead=8,
     src_vocab_size=sp.get_piece_size(),
     tgt_vocab_size=sp2.get_piece_size(),
-    dim_feedforward=512
+    dim_feedforward=2048
 ).to(DEVICE)
 
 criterion = nn.CrossEntropyLoss(ignore_index=PAD_IDX).to(DEVICE)
-optimizer = optim.Adam(model.parameters() , 0.0005)
+optimizer = optim.Adam(model.parameters() , 0.0003)
 
 # for main_name, main_module in model.named_children():
 #     print(main_name)
@@ -292,11 +317,21 @@ def run(model ,optimizer, criterion ,split ,data_iter):
 
     return losses/ len(list(dataloader))
 
-
-for epoch in range(5):
+temp_train_loss = 2000
+for epoch in range(40):
     train_loss = run(model , optimizer, criterion , 'train' , train_iter)
     ## val_loss = run(model , optimizer,  criterion , 'valid')
-
+    checkpoint = {
+        'epoch': epoch,
+        'model_state_dict': model.state_dict(),
+        'optimizer_state_dict': optimizer.state_dict(),
+        'train_loss': train_loss
+    }
+    torch.save(checkpoint, 'checkpoint.pth')
+    if(temp_train_loss > train_loss):
+        temp_train_loss = train_loss
+    else:
+        break
     print(f'Epoch : {epoch+1} , Train Loss : {train_loss:.3f}')
 
 

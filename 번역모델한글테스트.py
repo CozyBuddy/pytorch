@@ -2,37 +2,11 @@
 import sentencepiece as spm
 import pandas as pd
 
-# spm.SentencePieceTrainer.train(
-#     input='korean_corpus.txt',
-#     model_prefix='spm_ko',
-#     vocab_size=32000,
-#     model_type='unigram',
-#     user_defined_symbols=['<bos>', '<eos>'],
-#     pad_id=3,
-#     pad_piece='<pad>'
-# )
-
-# df = pd.read_json('일상생활및구어체_한영_train_set.json')
-# df = df['data'].apply(pd.Series)
-# # print(df)
-
-# df['ko_original'] = df['ko_original'].str.replace('>','')
-# df['mt'] = df['mt'].str.replace('>','')
-# train_iter = list(zip(df['ko_original'] ,df['mt']))
-# print(train_iter)
 
 sp = spm.SentencePieceProcessor()
 sp.load("spm_ko.model")
 
-# spm.SentencePieceTrainer.train(
-#     input='english_corpus.txt',
-#     model_prefix='spm_en',
-#     vocab_size=16000,
-#     model_type='unigram',
-#     pad_id=3,
-#     pad_piece='<pad>',
-#     user_defined_symbols=['<bos>', '<eos>']
-# )
+
 
 
 sp2 = spm.SentencePieceProcessor()
@@ -43,47 +17,6 @@ SRC_LANGUAGE = 'ko'
 TGT_LANGUAGE = 'en'
 UNK_IDX , BOS_IDX , EOS_IDX = sp.unk_id()  , sp.bos_id(), sp.eos_id()
 PAD_IDX = sp.piece_to_id('<pad>') 
-# special_symbols = ['<unk>' , "<pad>","<bos>","<eos>"]
-
-# token_transform = {
-#     SRC_LANGUAGE : lambda x: sp.encode(x, out_type=int, add_bos=True, add_eos=True),
-#     TGT_LANGUAGE : lambda x: sp2.encode(x, out_type=int, add_bos=True, add_eos=True),
-# }
-
-
-# df = pd.read_json('일상생활및구어체_한영_train_set.json')
-# df = df['data'].apply(pd.Series)
-# print(df)
-
-# df['ko_original'] = df['ko_original'].str.replace('>','')
-# df['mt'] = df['mt'].str.replace('>','')
-# train_iter = list(zip(df['ko_original'] ,df['mt']))
-# print(train_iter)
-
-# def generate_tokens(text_iter, language):
-#     language_index = { SRC_LANGUAGE:0 , TGT_LANGUAGE:1}
-
-#     for text in text_iter:
-#         yield token_transform[language](text[language_index[language]],
-#                                            out_type=int,
-#                                            add_bos=True,   # 여기서 BOS 추가
-#                                            add_eos=True)
-
-
-# vocab_transform = {
-#     SRC_LANGUAGE : sp.piece_to_id,
-#     TGT_LANGUAGE : sp2.piece_to_id,
-# }
-# for language in [SRC_LANGUAGE , TGT_LANGUAGE] :
-#     vocab_transform[language] = build_vocab_from_iterator(
-#         generate_tokens(train_iter, language),
-#         min_freq =1 ,
-#         specials=special_symbols,
-#         special_first=True
-#     )
-
-# for language in [SRC_LANGUAGE , TGT_LANGUAGE]:
-#     vocab_transform[language].set_default_index(UNK_IDX)
 
 
 import math
@@ -181,34 +114,16 @@ model = Seq2SeqTransformer(
     nhead=8,
     src_vocab_size=sp.get_piece_size(),
     tgt_vocab_size=sp2.get_piece_size(),
-    dim_feedforward=512
+    dim_feedforward=2048
 ).to(DEVICE)
 
 criterion = nn.CrossEntropyLoss(ignore_index=PAD_IDX).to(DEVICE)
 optimizer = optim.Adam(model.parameters())
 
-# for main_name, main_module in model.named_children():
-#     print(main_name)
-#     for sub_name ,sub_module, in main_module.named_children():
-#         print('ㄴ' , sub_name)
-#         for ssub_name , ssub_module in sub_module.named_children():
-#             print('| ㄴ' , ssub_name)
-#             for sssub_name , sssub_module in ssub_module.named_children():
-#                 print('| | ㄴ' , sssub_name)
 
 from torch.utils.data import DataLoader
 from torch.nn.utils.rnn import pad_sequence
 
-# def sequential_transforms(*transforms):
-#     def func(txt_input):
-#         for transform in transforms:
-#             txt_input = transform(txt_input)
-
-#         return txt_input
-#     return func
-
-# def input_transform(token_ids):
-#     return torch.tensor(token_ids ,dtype=torch.long)
 
 def encode_safe(sp, text):
     tokens = sp.encode(text, out_type=int, add_bos=True, add_eos=True)
@@ -234,14 +149,6 @@ def collator(batch):
 
     return src_batch , tgt_batch
 
-# data_iter = Multi30k(split='valid' , language_pair=(SRC_LANGUAGE , TGT_LANGUAGE))
-# dataloader = DataLoader(data_iter , batch_size=BATCH_SIZE , collate_fn=collator)
-# source_tensor , target_tensor = next(iter(dataloader))
-
-# print('(source, target):')
-# print( next(iter(data_iter)))
-# print('soruce_batch' , source_tensor.shape)
-# print('target_batch' , target_tensor.shape)
 
 def generate_square_subsequent_mask(s):
     mask = (torch.triu(torch.ones((s,s) ,dtype=torch.bool , device=DEVICE)) == 1).transpose(0,1)
@@ -262,50 +169,6 @@ def create_mask(src,tgt):
 
     return src_mask , tgt_mask , src_padding_mask , tgt_padding_mask
 
-# target_input = target_tensor[:-1,:]
-# target_out = target_tensor[1:,:]
-
-# source_mask , target_mask , source_padding_mask , target_padding_mask = create_mask(
-#     source_tensor, target_input 
-# )
-
-# def run(model ,optimizer, criterion ,split ,data_iter):
-#     model.train() if split == 'train' else model.eval()
-#     dataloader = DataLoader(data_iter, batch_size=BATCH_SIZE , collate_fn=collator)
-
-#     losses = 0
-
-#     for source_batch , target_batch in dataloader:
-#         source_batch = source_batch.to(DEVICE)
-#         target_batch = target_batch.to(DEVICE)
-
-#         target_input = target_batch[:-1 , :]
-#         target_output = target_batch[1:,:]
-
-#         src_mask ,tgt_mask , src_padding_mask , tgt_padding_mask  = create_mask(
-#             source_batch , target_input
-#         )
-        
-#         logits = model(src=source_batch, trg=target_input , src_mask=src_mask , tgt_mask=tgt_mask , src_padding_mask=src_padding_mask , tgt_padding_mask=tgt_padding_mask , memory_key_padding_mask=src_padding_mask)
-
-#         #
-#         optimizer.zero_grad()
-#         loss = criterion(logits.reshape(-1 , logits.shape[-1]) , target_output.reshape(-1))
-
-
-#         if split == 'train':
-#             loss.backward()
-#             optimizer.step()
-#         losses += loss.item()
-
-#     return losses/ len(list(dataloader))
-
-
-# for epoch in range(5):
-#     train_loss = run(model , optimizer, criterion , 'train' , train_iter)
-#     ## val_loss = run(model , optimizer,  criterion , 'valid')
-
-#     print(f'Epoch : {epoch+1} , Train Loss : {train_loss:.3f}')
 
 
 def greedy_decode(model , source_tensor , source_mask , max_len , start_symbol):
@@ -367,7 +230,7 @@ def translate(model , source_sentence):
 
 model.load_state_dict(torch.load("translatekoen.pth", map_location=DEVICE))
 model.eval()
-output_oov = translate(model , '어디 가세요?')
+output_oov = translate(model , '''이제일어나서 각자의 길을 가자''')
 # torch.save(model.state_dict(), "translatekoen.pth")
 print('oove' ,output_oov)
 
